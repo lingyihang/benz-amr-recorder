@@ -6110,7 +6110,6 @@ var AMR = (function () {
                 b[g >> 1] = i;
                 return k | 0
             }
-            return 0
         }
 
         function La(a) {
@@ -10173,7 +10172,6 @@ var AMR = (function () {
                     return j | 0
                 }
             }
-            return 0
         }
 
         function Kb(a, c, d, e, f, g) {
@@ -12468,7 +12466,6 @@ var AMR = (function () {
                 a = -1;
                 return a | 0
             }
-            return 0
         }
 
         function Zb(a) {
@@ -13963,7 +13960,6 @@ var AMR = (function () {
                 b = b & 65535;
                 return b | 0
             }
-            return 0
         }
 
         function qc(a, b, c, d, e) {
@@ -15296,7 +15292,6 @@ var AMR = (function () {
                 a = -1;
                 return a | 0
             }
-            return 0
         }
 
         function Qc(a) {
@@ -15833,7 +15828,6 @@ var AMR = (function () {
                 i = U;
                 return d | 0
             }
-            return 0
         }
 
         function Yc(a, d, e, f, g, h, j, k, l) {
@@ -17962,7 +17956,6 @@ var AMR = (function () {
                 i = K;
                 return o | 0
             }
-            return 0
         }
 
         function pd(a, c, d, f, g, h, j, k, l) {
@@ -19025,7 +19018,6 @@ var AMR = (function () {
                 b[a >> 1] = 0;
                 return 0
             }
-            return 0
         }
 
         function Ed(a, c, d) {
@@ -19936,7 +19928,6 @@ var AMR = (function () {
                 j = j & 65535;
                 return j | 0
             }
-            return 0
         }
 
         function Rd(a, b, d) {
@@ -20874,7 +20865,7 @@ var AMR = (function () {
             }
             d = (pe(a) | 0) << 16 >> 16;
             c = 30 - d | 0;
-            a = a << d >> (c & 1 ^ 1);
+            a = (a << d) >> (c & 1 ^ 1);
             d = (a >> 25 << 16) + -1048576 >> 16;
             f = b[7030 + (d << 1) >> 1] | 0;
             c = (f << 16) - (Z(f - (e[7030 + (d + 1 << 1) >> 1] | 0) << 16 >> 15, a >>> 10 & 32767) | 0) >> (c << 16 >> 17) + 1;
@@ -22338,7 +22329,6 @@ var AMR = (function () {
                 b = c;
                 return b | 0
             }
-            return 0
         }
 
         function Fe(a, d, f) {

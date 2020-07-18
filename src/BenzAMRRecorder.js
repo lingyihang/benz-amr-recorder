@@ -16,6 +16,12 @@ const amrWorkerStr = amrWorker.toString()
     .replace(/}\s*$/, '');
 const amrWorkerURLObj = (window.URL || window.webkitURL).createObjectURL(new Blob([amrWorkerStr], {type:"text/javascript"}));
 
+import amrWbWorker from "./amrwb";
+const amrWbWorkerStr = amrWbWorker.toString()
+    .replace(/^\s*function.*?\(\)\s*{/, '')
+    .replace(/}\s*$/, '');
+const amrWbWorkerURLObj = (window.URL || window.webkitURL).createObjectURL(new Blob([amrWbWorkerStr], {type:"text/javascript"}));
+
 export default class BenzAMRRecorder {
 
     _isInit = false;
@@ -55,6 +61,8 @@ export default class BenzAMRRecorder {
     _startCtxTime = 0.0;
 
     _pauseTime = 0.0;
+
+    _wbAudioType = '';
     
     constructor() {
     }
@@ -72,36 +80,64 @@ export default class BenzAMRRecorder {
      * @param {Float32Array} array
      * @return {Promise}
      */
-    initWithArrayBuffer(array) {
+    initWithArrayBuffer(array, audioType) {
+        this._wbAudioType = audioType;
         if (this._isInit || this._isInitRecorder) {
             BenzAMRRecorder.throwAlreadyInitialized();
         }
         this._playEmpty();
         return new Promise((resolve, reject) => {
-            let u8Array = new Uint8Array(array);
-            this.decodeAMRAsync(u8Array).then((samples) => {
-                this._samples = samples;
-                this._isInit = true;
-
-                if (!this._samples) {
-                    RecorderControl.decodeAudioArrayBufferByContext(array).then((data) => {
-                        this._isInit = true;
-                        return this.encodeAMRAsync(data, RecorderControl.getCtxSampleRate());
-                    }).then((rawData) => {
-                        this._rawData = rawData;
-                        this._blob = BenzAMRRecorder.rawAMRData2Blob(rawData);
-                        return this.decodeAMRAsync(rawData);
-                    }).then((sample) => {
-                        this._samples = sample;
+            if(audioType && audioType === 'audio/amr-wb') {
+                let u8Array = new Uint8Array(array);
+                this.decodeAMRWBAsync(u8Array).then((samples) => {
+                    this._samples = samples;
+                    this._isInit = true;
+    
+                    if (!this._samples) {
+                        RecorderControl.decodeAudioArrayBufferByContext(array).then((data) => {
+                            this._isInit = true;
+                            return this.encodeAMRAsync(data, RecorderControl.getCtxSampleRate());
+                        }).then((rawData) => {
+                            this._rawData = rawData;
+                            this._blob = BenzAMRRecorder.rawAMRWBData2Blob(rawData);
+                            return this.decodeAMRWBAsync(rawData);
+                        }).then((sample) => {
+                            this._samples = sample;
+                            resolve();
+                        }).catch(() => {
+                            reject(new Error('Failed to decode.'));
+                        });
+                    } else {
+                        this._rawData = u8Array;
                         resolve();
-                    }).catch(() => {
-                        reject(new Error('Failed to decode.'));
-                    });
-                } else {
-                    this._rawData = u8Array;
-                    resolve();
-                }
-            });
+                    }
+                });
+            }else {
+                let u8Array = new Uint8Array(array);
+                this.decodeAMRAsync(u8Array).then((samples) => {
+                    this._samples = samples;
+                    this._isInit = true;
+    
+                    if (!this._samples) {
+                        RecorderControl.decodeAudioArrayBufferByContext(array).then((data) => {
+                            this._isInit = true;
+                            return this.encodeAMRAsync(data, RecorderControl.getCtxSampleRate());
+                        }).then((rawData) => {
+                            this._rawData = rawData;
+                            this._blob = BenzAMRRecorder.rawAMRData2Blob(rawData);
+                            return this.decodeAMRAsync(rawData);
+                        }).then((sample) => {
+                            this._samples = sample;
+                            resolve();
+                        }).catch(() => {
+                            reject(new Error('Failed to decode.'));
+                        });
+                    } else {
+                        this._rawData = u8Array;
+                        resolve();
+                    }
+                });
+            }
         });
     }
 
@@ -110,7 +146,8 @@ export default class BenzAMRRecorder {
      * @param {Blob} blob
      * @return {Promise}
      */
-    initWithBlob(blob) {
+    initWithBlob(blob, audioType) {
+        this._wbAudioType = audioType;
         if (this._isInit || this._isInitRecorder) {
             BenzAMRRecorder.throwAlreadyInitialized();
         }
@@ -124,7 +161,7 @@ export default class BenzAMRRecorder {
             reader.readAsArrayBuffer(blob);
         });
         return p.then((data) => {
-            return this.initWithArrayBuffer(data);
+            return this.initWithArrayBuffer(data, audioType);
         });
     }
 
@@ -133,7 +170,8 @@ export default class BenzAMRRecorder {
      * @param {string} url
      * @return {Promise}
      */
-    initWithUrl(url) {
+    initWithUrl(url, audioType) {
+        this._wbAudioType = audioType;
         if (this._isInit || this._isInitRecorder) {
             BenzAMRRecorder.throwAlreadyInitialized();
         }
@@ -151,7 +189,7 @@ export default class BenzAMRRecorder {
             xhr.send();
         });
         return p.then((array) => {
-            return this.initWithArrayBuffer(array);
+            return this.initWithArrayBuffer(array, audioType);
         });
     }
 
@@ -328,7 +366,8 @@ export default class BenzAMRRecorder {
             this._samples,
             this._isInitRecorder ? RecorderControl.getCtxSampleRate() : 8000,
             this._onEndCallback.bind(this),
-            _startTime
+            _startTime,
+            this._wbAudioType
         );
     }
 
@@ -567,6 +606,40 @@ export default class BenzAMRRecorder {
                 buffer: u8Array
             }, resolve);
         })
+    }
+
+    // amr-wb
+    _runAMRWBWorker = (msg, resolve) => {
+        const amrWbWorker = new Worker(amrWbWorkerURLObj);
+        amrWbWorker.postMessage(msg);
+        amrWbWorker.onmessage = (e) => {
+            resolve(e.data.amr);
+            amrWbWorker.terminate();
+        };
+    };
+
+    // amr-wb 编码
+    encodeAMRWBAsync(samples, sampleRate) {
+        return new Promise(resolve => {
+            this._runAMRWBWorker({
+                command: 'encode',
+                samples: samples,
+                sampleRate: sampleRate
+            }, resolve);
+        });
+    }
+
+    decodeAMRWBAsync(u8Array) {
+        return new Promise(resolve => {
+            this._runAMRWBWorker({
+                command: 'decode',
+                buffer: u8Array
+            }, resolve);
+        })
+    }
+
+    static rawAMRWBData2Blob(data) {
+        return new Blob([data.buffer], {type: 'audio/amr-wb'});
     }
 
     static rawAMRData2Blob(data) {

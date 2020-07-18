@@ -15,12 +15,12 @@ export default [
                 browser: true
             }),
             babel({
-                exclude: ['./node_modules/**', './src/amrnb.js']
+                exclude: ['./node_modules/**', './src/amrnb.js', './src/amrwb.js']
             }),
             cjs(),
             // https://github.com/rollup/rollup/wiki/Troubleshooting#avoiding-eval
             replace({
-                include: ['./src/amrnb.js'],
+                include: ['./src/amrnb.js', './src/amrwb.js'],
                 replaces: {
                     'eval(': '[eval][0]('
                 }
@@ -44,12 +44,12 @@ export default [
                 browser: true
             }),
             babel({
-                exclude: ['./node_modules/benz-recorderjs/**', './src/amrnb.js']
+                exclude: ['./node_modules/benz-recorderjs/**', './src/amrnb.js', './src/amrwb.js']
             }),
             cjs(),
             // https://github.com/rollup/rollup/wiki/Troubleshooting#avoiding-eval
             replace({
-                include: ['./src/amrnb.js'],
+                include: ['./src/amrnb.js', './src/amrwb.js'],
                 replaces: {
                     'eval(': '[eval][0]('
                 }
