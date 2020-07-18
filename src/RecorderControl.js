@@ -32,8 +32,17 @@ export default class RecorderControl {
     _curSourceNode = null;
 
     playPcm (samples, sampleRate, onEnded, startPos, audioType) {
-        sampleRate = sampleRate || 8000;
+        let changeSampleRate = 8000;
+        // 针对 amr-wb进行采样率翻倍
+        if(audioType && audioType === 'audio/amr-wb') {
+            changeSampleRate = 16000;
+        }else {
+            changeSampleRate = sampleRate;
+        }
+
+        sampleRate = changeSampleRate;
         this.stopPcm();
+
         let _samples = (startPos && startPos > 0.001) ? (
             // 根据开始位置（秒数）截取播放采样
             samples.slice(sampleRate * startPos)
@@ -46,34 +55,16 @@ export default class RecorderControl {
 
         try {
             console.log('playPcm try 采样率 ', sampleRate);
-            if(audioType && audioType === 'audio/amr-wb') {
-                buffer = ctx['createBuffer'](1, _samples.length, 16000);
-            }else {
-                buffer = ctx['createBuffer'](1, _samples.length, sampleRate);
-            }
+            buffer = ctx['createBuffer'](1, _samples.length, sampleRate);
         } catch (e) {
             console.log('playPcm catch 采样率', sampleRate);
             // iOS 不支持 22050 以下的采样率，于是先提升采样率，然后用慢速播放
             if (sampleRate < 11025) {
-                /*buffer = ctx['createBuffer'](1, _samples.length * 3, sampleRate * 3);
-                _samples = this._increaseSampleRate(_samples, 3);*/
-                // buffer = ctx['createBuffer'](1, _samples.length, sampleRate * 4);
-                if(audioType && audioType === 'audio/amr-wb') {
-                    buffer = ctx['createBuffer'](1, _samples.length, 16000 * 4);
-                }else {
-                    buffer = ctx['createBuffer'](1, _samples.length, sampleRate * 4);
-                }
+                buffer = ctx['createBuffer'](1, _samples.length, sampleRate * 4);
 
                 this._curSourceNode['playbackRate'].value = 0.25;
             } else {
-                /*buffer = ctx['createBuffer'](1, _samples.length * 2, sampleRate * 2);
-                _samples = this._increaseSampleRate(_samples, 2);*/
-                // buffer = ctx['createBuffer'](1, _samples.length, sampleRate * 2);
-                if(audioType && audioType === 'audio/amr-wb') {
-                    buffer = ctx['createBuffer'](1, _samples.length, 16000 * 2);
-                }else {
-                    buffer = ctx['createBuffer'](1, _samples.length, sampleRate * 2);
-                }
+                buffer = ctx['createBuffer'](1, _samples.length, sampleRate * 2);
                 this._curSourceNode['playbackRate'].value = 0.5;
             }
         }

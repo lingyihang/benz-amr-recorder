@@ -414,6 +414,7 @@ export default class BenzAMRRecorder {
             this._isInitRecorder ? RecorderControl.getCtxSampleRate() : 8000,
             this._onEndCallback.bind(this),
             this._pauseTime,
+            this._wbAudioType
         );
         if (this._onResume) {
             this._onResume();
@@ -473,6 +474,7 @@ export default class BenzAMRRecorder {
                 this._isInitRecorder ? RecorderControl.getCtxSampleRate() : 8000,
                 this._onEndCallback.bind(this),
                 _time,
+                this._wbAudioType
             );
         } else {
             this.play(_time);

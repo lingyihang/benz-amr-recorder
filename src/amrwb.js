@@ -12035,7 +12035,7 @@ module.exports = function() {
 	};
 
 	function encode(samples, sampleRate) {
-		sampleRate = sampleRate || 8000;
+		sampleRate = sampleRate || 16000;
 		self.postMessage({
 			command: 'encode',
 			amr: AMRWB.encode(samples, sampleRate, 7)
