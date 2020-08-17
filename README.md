@@ -1,3 +1,18 @@
+# H5自主解析音频播放器
+
+![AcoWaves](https://img.shields.io/badge/AcoWaves-AudioPlayer-red) 
+[![size](https://img.shields.io/github/size/AcoWaves/benz-amr-recorder/BenzAMRRecorder.min.js)](https://gitHub.com/AcoWaves/benz-amr-recorder/blob/master/BenzAMRRecorder.min.js)
+
+fork 自[BenzLeung的 benz-amr-recorder 项目](https://github.com/BenzLeung/benz-amr-recorder) ;这个库非常好用，但是由于不支持 amr-wb 音频格式的解析，而恰巧工作中有需要解析 amr-wb 的场景，因此，我fork 了一份，自己添加了一些功能
+
+目前已支持
+1. amr-nb, amr-wb, aac, mp3 音频格式的解析和播放；
+2. 支持录音，并保存为 amr-nb格式的音频文件
+
+其他功能均继承自原库
+
+------
+
 # AMR 录音机 [![GitHub stars](https://img.shields.io/github/stars/BenzLeung/benz-amr-recorder.svg?style=social&label=Star&maxAge=2592000)](https://gitHub.com/BenzLeung/benz-amr-recorder/)
 
 ([README in English](./README-EN.md))
@@ -5,7 +20,6 @@
 [![npm](https://img.shields.io/npm/v/benz-amr-recorder.svg)](https://www.npmjs.com/package/benz-amr-recorder)
 [![npm](https://img.shields.io/npm/dt/benz-amr-recorder.svg)](https://www.npmjs.com/package/benz-amr-recorder)
 [![size](https://img.shields.io/github/size/BenzLeung/benz-amr-recorder/BenzAMRRecorder.min.js)](https://gitHub.com/BenzLeung/benz-amr-recorder/BenzAMRRecorder.min.js)
-[![gzip size](http://img.badgesize.io/https://npmcdn.com/benz-amr-recorder/BenzAMRRecorder.min.js?compression=gzip)](https://gitHub.com/BenzLeung/benz-amr-recorder/BenzAMRRecorder.min.js)
 
 纯前端解码、播放、录音、编码 AMR 音频，无须服务器支持，基于 [amr.js](https://github.com/jpemartins/amr.js) 和 [RecorderJs](https://github.com/jergason/Recorderjs)。
 
@@ -417,3 +431,4 @@ BenzAMRRecorder.isRecordSupported();
 # 许可
 
 MIT.
+
