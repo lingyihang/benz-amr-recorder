@@ -37286,7 +37286,7 @@
     }, {
       key: "getDuration",
       value: function getDuration() {
-        var rate = this._isInitRecorder ? RecorderControl.getCtxSampleRate() : 8000;
+        var rate = this._isInitRecorder ? RecorderControl.getCtxSampleRate() : this._wbAudioType === 'audio/amr-wb' ? 16000 : 8000;
         return this._samples.length / rate;
       }
     }, {
