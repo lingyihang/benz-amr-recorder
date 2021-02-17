@@ -298,12 +298,22 @@
   var ctx = null;
   var isSupport = true;
 
-  if (AudioContext) {
-    ctx = new AudioContext();
-  } else {
-    isSupport = false;
-    console.warn('Web Audio API is Unsupported.');
-  }
+  window.resetAudioContext = function () {
+    if (ctx) {
+      ctx.close().then(function () {
+        ctx = null;
+        ctx = new AudioContext();
+      });
+    } else {
+      if (AudioContext) {
+        ctx = new AudioContext();
+      } else {
+        isSupport = false;
+      }
+    }
+  };
+
+  window.resetAudioContext();
 
   var RecorderControl =
   /*#__PURE__*/
@@ -330,10 +340,9 @@
         }
 
         sampleRate = changeSampleRate;
-        this.stopPcm();
+        this.stopPcm(); // 根据开始位置（秒数）截取播放采样
 
-        var _samples = startPos && startPos > 0.001 ? // 根据开始位置（秒数）截取播放采样
-        samples.slice(sampleRate * startPos) : samples;
+        var _samples = startPos && startPos > 0.001 ? samples.slice(sampleRate * startPos) : samples;
 
         if (!_samples || !_samples.length) {
           return onEnded();
@@ -343,10 +352,10 @@
         this._curSourceNode = ctx['createBufferSource']();
 
         try {
-          console.log('playPcm try 采样率 ', sampleRate);
+          console.log('[root- playPcm try 采样率] ', sampleRate);
           buffer = ctx['createBuffer'](1, _samples.length, sampleRate);
         } catch (e) {
-          console.log('playPcm catch 采样率', sampleRate); // iOS 不支持 22050 以下的采样率，于是先提升采样率，然后用慢速播放
+          console.log('[root- playPcm catch 采样率]', sampleRate); // iOS 不支持 22050 以下的采样率，于是先提升采样率，然后用慢速播放
 
           if (sampleRate < 11025) {
             buffer = ctx['createBuffer'](1, _samples.length, sampleRate * 4);
@@ -521,7 +530,7 @@
                   var right = audioBuf.getChannelData(1);
 
                   for (var i = 0, l = dest.length; i < l; i++) {
-                    dest[i] = .5 * (left[i] + right[i]);
+                    dest[i] = 0.5 * (left[i] + right[i]);
                   }
 
                   break;
@@ -537,7 +546,7 @@
                   var sRight = audioBuf.getChannelData(3);
 
                   for (var _i = 0, _l = dest.length; _i < _l; _i++) {
-                    dest[_i] = .25 * (_left[_i] + _right[_i] + sLeft[_i] + sRight[_i]);
+                    dest[_i] = 0.25 * (_left[_i] + _right[_i] + sLeft[_i] + sRight[_i]);
                   }
 
                   break;

@@ -15,15 +15,24 @@ const AudioContext = window.AudioContext || window.webkitAudioContext || window.
 let ctx = null;
 let isSupport = true;
 
-if (AudioContext) {
-    ctx = new AudioContext();
-} else {
-    isSupport = false;
-    console.warn('Web Audio API is Unsupported.');
-}
+window.resetAudioContext = () => {
+    if (ctx) {
+        ctx.close().then(() => {
+            ctx = null;
+            ctx = new AudioContext();
+        });
+    } else {
+        if (AudioContext) {
+            ctx = new AudioContext();
+        } else {
+            isSupport = false;
+        }
+    }
+};
+
+window.resetAudioContext();
 
 export default class RecorderControl {
-
     _recorderStream = null;
     _recorderStreamSourceNode = null;
     _recorder = null;
@@ -31,22 +40,20 @@ export default class RecorderControl {
 
     _curSourceNode = null;
 
-    playPcm (samples, sampleRate, onEnded, startPos, audioType) {
+    playPcm(samples, sampleRate, onEnded, startPos, audioType) {
         let changeSampleRate = 8000;
         // 针对 amr-wb进行采样率翻倍
-        if(audioType && audioType === 'audio/amr-wb') {
+        if (audioType && audioType === 'audio/amr-wb') {
             changeSampleRate = 16000;
-        }else {
+        } else {
             changeSampleRate = sampleRate;
         }
 
         sampleRate = changeSampleRate;
         this.stopPcm();
 
-        let _samples = (startPos && startPos > 0.001) ? (
-            // 根据开始位置（秒数）截取播放采样
-            samples.slice(sampleRate * startPos)
-        ) : samples;
+        // 根据开始位置（秒数）截取播放采样
+        let _samples = (startPos && startPos > 0.001) ? samples.slice(sampleRate * startPos) : samples;
         if (!_samples || !_samples.length) {
             return onEnded();
         }
@@ -54,10 +61,10 @@ export default class RecorderControl {
         this._curSourceNode = ctx['createBufferSource']();
 
         try {
-            console.log('playPcm try 采样率 ', sampleRate);
+            console.log('[root- playPcm try 采样率] ', sampleRate);
             buffer = ctx['createBuffer'](1, _samples.length, sampleRate);
         } catch (e) {
-            console.log('playPcm catch 采样率', sampleRate);
+            console.log('[root- playPcm catch 采样率]', sampleRate);
             // iOS 不支持 22050 以下的采样率，于是先提升采样率，然后用慢速播放
             if (sampleRate < 11025) {
                 buffer = ctx['createBuffer'](1, _samples.length, sampleRate * 4);
@@ -69,7 +76,7 @@ export default class RecorderControl {
             }
         }
         if (buffer['copyToChannel']) {
-            buffer['copyToChannel'](_samples, 0, 0)
+            buffer['copyToChannel'](_samples, 0, 0);
         } else {
             channelBuffer = buffer['getChannelData'](0);
             channelBuffer.set(_samples);
@@ -107,9 +114,9 @@ export default class RecorderControl {
             };
             if (!this._recorder) {
                 if (window.navigator.mediaDevices && window.navigator.mediaDevices.getUserMedia) {
-                    window.navigator.mediaDevices.getUserMedia({audio: true}).then(s).catch(j);
+                    window.navigator.mediaDevices.getUserMedia({ audio: true }).then(s).catch(j);
                 } else if (window.navigator.getUserMedia) {
-                    window.navigator.getUserMedia({audio: true}, s, j);
+                    window.navigator.getUserMedia({ audio: true }, s, j);
                 } else {
                     j();
                 }
@@ -166,7 +173,10 @@ export default class RecorderControl {
     }
 
     static isRecordSupported() {
-        return !!(window.navigator.mediaDevices && window.navigator.mediaDevices.getUserMedia || window.navigator.getUserMedia);
+        return !!(
+            (window.navigator.mediaDevices && window.navigator.mediaDevices.getUserMedia) ||
+            window.navigator.getUserMedia
+        );
     }
 
     static getCtxSampleRate() {
@@ -179,49 +189,56 @@ export default class RecorderControl {
 
     static decodeAudioArrayBufferByContext(array) {
         return new Promise((resolve, reject) => {
-            ctx['decodeAudioData'](array, (audioBuf) => {
-                // 把多声道音频 mix 成单声道
-                const numberOfChannels = audioBuf.numberOfChannels;
-                let dest = new Float32Array(audioBuf.length);
+            ctx['decodeAudioData'](
+                array,
+                (audioBuf) => {
+                    // 把多声道音频 mix 成单声道
+                    const numberOfChannels = audioBuf.numberOfChannels;
+                    let dest = new Float32Array(audioBuf.length);
 
-                switch (numberOfChannels) {
-                    default:
-                    case 1: {
-                        dest = audioBuf.getChannelData(0);
-                        break;
-                    }
-                    case 2: {
-                        const left = audioBuf.getChannelData(0);
-                        const right = audioBuf.getChannelData(1);
-                        for (let i = 0, l = dest.length; i < l; i++) {
-                            dest[i] = .5 * (left[i] + right[i])
+                    switch (numberOfChannels) {
+                        default:
+                        case 1: {
+                            dest = audioBuf.getChannelData(0);
+                            break;
                         }
-                        break;
-                    }
-                    case 4: {
-                        const left = audioBuf.getChannelData(0);
-                        const right = audioBuf.getChannelData(1);
-                        const sLeft = audioBuf.getChannelData(2);
-                        const sRight = audioBuf.getChannelData(3);
-                        for (let i = 0, l = dest.length; i < l; i++) {
-                            dest[i] = .25 * (left[i] + right[i] + sLeft[i] + sRight[i])
+                        case 2: {
+                            const left = audioBuf.getChannelData(0);
+                            const right = audioBuf.getChannelData(1);
+                            for (let i = 0, l = dest.length; i < l; i++) {
+                                dest[i] = 0.5 * (left[i] + right[i]);
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    case 6: {
-                        const left = audioBuf.getChannelData(0);
-                        const right = audioBuf.getChannelData(1);
-                        const center = audioBuf.getChannelData(2);
-                        const sLeft = audioBuf.getChannelData(4);
-                        const sRight = audioBuf.getChannelData(5);
-                        for (let i = 0, l = dest.length; i < l; i++) {
-                            dest[i] = 0.7071 * (left[i] + right[i]) + center[i] + 0.5 * (sLeft[i] + sRight[i])
+                        case 4: {
+                            const left = audioBuf.getChannelData(0);
+                            const right = audioBuf.getChannelData(1);
+                            const sLeft = audioBuf.getChannelData(2);
+                            const sRight = audioBuf.getChannelData(3);
+                            for (let i = 0, l = dest.length; i < l; i++) {
+                                dest[i] = 0.25 * (left[i] + right[i] + sLeft[i] + sRight[i]);
+                            }
+                            break;
                         }
-                        break;
+                        case 6: {
+                            const left = audioBuf.getChannelData(0);
+                            const right = audioBuf.getChannelData(1);
+                            const center = audioBuf.getChannelData(2);
+                            const sLeft = audioBuf.getChannelData(4);
+                            const sRight = audioBuf.getChannelData(5);
+                            for (let i = 0, l = dest.length; i < l; i++) {
+                                dest[i] =
+                                    0.7071 * (left[i] + right[i]) +
+                                    center[i] +
+                                    0.5 * (sLeft[i] + sRight[i]);
+                            }
+                            break;
+                        }
                     }
-                }
-                resolve(dest);
-            }, reject);
+                    resolve(dest);
+                },
+                reject
+            );
         });
     }
 
