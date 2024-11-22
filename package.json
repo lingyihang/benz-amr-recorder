@@ -1,7 +1,7 @@
 {
-  "name": "amr-recorder",
+  "name": "amr-recorder-wb",
   "version": "1.1.2",
-  "description": "amr 音频录制与播放（微信语音所用的格式）",
+  "description": "amr 音频录制与播放 添加amr-wb",
   "main": "BenzAMRRecorder.js",
   "types": "BenzAMRRecorder.d.ts",
   "directories": {
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BenzLeung/benz-amr-recorder.git"
+    "url": "git+https://github.com/lingyihang/benz-amr-recorder.git"
   },
   "keywords": [
     "amr",
@@ -23,9 +23,9 @@
   "author": "Benz Leung",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/BenzLeung/benz-amr-recorder/issues"
+    "url": "https://github.com/lingyihang/benz-amr-recorder/issues"
   },
-  "homepage": "https://github.com/BenzLeung/benz-amr-recorder#readme",
+  "homepage": "https://github.com/lingyihang/benz-amr-recorder#readme",
   "devDependencies": {
     "@babel/core": "^7.2.2",
     "@babel/plugin-external-helpers": "^7.2.0",
